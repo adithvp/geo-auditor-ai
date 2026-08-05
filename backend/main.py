@@ -2,10 +2,10 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import os
+print("🚀 GEO Auditor backend loaded")
 from crawler import extract_site_data
 from geo_engine import run_ai_evaluations
 from scoring import calculate_geo_score
-
 app = FastAPI(
     title="GEO Auditor API",
     description="Generative Engine Optimization (GEO) Website Auditor & AI Visibility Scoring Engine",
