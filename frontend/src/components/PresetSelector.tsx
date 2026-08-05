@@ -15,10 +15,10 @@ const PRESETS = [
 
 export const PresetSelector: React.FC<PresetSelectorProps> = ({ onSelectUrl, disabled }) => {
   return (
-    <div className="flex flex-wrap items-center gap-2 mt-3">
-      <span className="text-xs text-gray-400 flex items-center gap-1">
-        <Sparkles className="w-3 h-3 text-cyan-400" />
-        Sample Real Business Audits:
+    <div className="flex flex-wrap items-center justify-center gap-2 mt-4">
+      <span className="text-xs text-gray-400 font-medium flex items-center gap-1.5 mr-1">
+        <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+        Sample Live Business Presets:
       </span>
       {PRESETS.map((preset) => (
         <button
@@ -26,10 +26,10 @@ export const PresetSelector: React.FC<PresetSelectorProps> = ({ onSelectUrl, dis
           type="button"
           disabled={disabled}
           onClick={() => onSelectUrl(preset.url)}
-          className="text-xs px-2.5 py-1 rounded-lg bg-gray-900/80 hover:bg-gray-800 text-gray-300 hover:text-white border border-gray-800 hover:border-cyan-500/40 transition-all flex items-center gap-1 disabled:opacity-50"
+          className="text-xs px-3 py-1.5 rounded-xl bg-gray-900/90 hover:bg-gray-800 text-gray-300 hover:text-white border border-gray-800 hover:border-cyan-500/50 shadow-sm transition-all duration-200 flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed group"
         >
-          <Globe className="w-3 h-3 text-cyan-400" />
-          <span>{preset.name}</span>
+          <Globe className="w-3.5 h-3.5 text-cyan-400 group-hover:scale-110 transition-transform" />
+          <span className="font-medium">{preset.name}</span>
         </button>
       ))}
     </div>
