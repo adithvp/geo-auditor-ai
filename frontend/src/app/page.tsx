@@ -57,7 +57,7 @@ export default function Home() {
 
       <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14 space-y-12">
         {/* Hero & Search Section */}
-        <section className="text-center space-y-8 max-w-4xl mx-auto print:hidden relative">
+        <section className="text-center space-y-8 max-w-4xl mx-auto print:hidden relative w-full">
           {/* Background Ambient Glow */}
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-cyan-500/10 rounded-full blur-[120px] pointer-events-none -z-10" />
 
@@ -80,33 +80,35 @@ export default function Home() {
             Uncover how <strong className="text-gray-200">ChatGPT</strong>, <strong className="text-gray-200">Perplexity</strong>, <strong className="text-gray-200">Claude</strong>, and <strong className="text-gray-200">Google AI Overviews</strong> read, cite, and rank your business. Get evidence-backed clarity scores and handed-to-you code fixes.
           </p>
 
-          {/* Search Input Box */}
-          <div className="pt-4 max-w-2xl mx-auto">
+          {/* Search Input Container - Full Width Fix */}
+          <div className="w-full max-w-3xl mx-auto pt-2">
             <form
               onSubmit={(e) => {
                 e.preventDefault();
                 runAudit();
               }}
-              className="relative"
+              className="w-full"
             >
-              <div className="relative flex items-center">
-                <div className="absolute left-5 pointer-events-none text-gray-400">
-                  <Search className="w-5 h-5 text-gray-400" />
-                </div>
+              <div className="relative flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-0 w-full glass-panel p-2 rounded-2xl border border-white/[0.1] shadow-2xl focus-within:border-cyan-500/60 focus-within:ring-4 focus-within:ring-cyan-500/10 transition-all">
+                <div className="relative flex-1 flex items-center min-w-0 w-full">
+                  <div className="absolute left-4 text-gray-400 pointer-events-none flex items-center justify-center">
+                    <Search className="w-5 h-5 text-gray-400" />
+                  </div>
 
-                <input
-                  type="text"
-                  placeholder="Enter website URL (e.g. https://stripe.com)"
-                  value={url}
-                  onChange={(e) => setUrl(e.target.value)}
-                  disabled={loading}
-                  className="w-full bg-[#0A0E1A]/90 border border-gray-800 focus:border-cyan-500/80 rounded-2xl pl-13 pr-36 py-4.5 text-sm text-white placeholder-gray-500 shadow-2xl focus:outline-none focus:ring-4 focus:ring-cyan-500/10 transition-all font-medium"
-                />
+                  <input
+                    type="text"
+                    placeholder="Enter website URL (e.g. https://stripe.com)"
+                    value={url}
+                    onChange={(e) => setUrl(e.target.value)}
+                    disabled={loading}
+                    className="w-full bg-transparent text-white text-sm sm:text-base font-medium placeholder-gray-500 pl-12 pr-4 py-3.5 sm:py-4 focus:outline-none min-w-0"
+                  />
+                </div>
 
                 <button
                   type="submit"
                   disabled={loading || !url.trim()}
-                  className="absolute right-2.5 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold px-6 py-3 rounded-xl text-xs sm:text-sm flex items-center gap-2 shadow-lg shadow-cyan-500/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed group"
+                  className="w-full sm:w-auto shrink-0 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold px-6 sm:px-7 py-3 sm:py-3.5 rounded-xl text-sm flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed group"
                 >
                   {loading ? (
                     <>
