@@ -22,8 +22,10 @@ cd backend
 pip install -r requirements.txt
 
 # (Optional) Provide your OpenAI API key for live GPT-4o AI evaluations.
-# If omitted, the engine automatically uses the built-in GEO rule heuristic engine!
-export OPENAI_API_KEY="your-openai-api-key"
+# Must start with 'sk-'. If omitted or set to a placeholder, the engine automatically uses the rule heuristic engine!
+export OPENAI_API_KEY="sk-proj-your-api-key"
+export OPENAI_MODEL="gpt-4o"
+export DEBUG="True"
 
 # Start FastAPI server on port 8000
 uvicorn main:app --reload --port 8000

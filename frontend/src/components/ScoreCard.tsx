@@ -1,5 +1,5 @@
 import React from 'react';
-import { Activity, CheckCircle2, FileText, Code2, HelpCircle, Cpu, Zap } from 'lucide-react';
+import { Activity, CheckCircle2, FileText, Code2, HelpCircle, Cpu, Zap, Sparkles, Server } from 'lucide-react';
 
 interface ScoreCardProps {
   report: {
@@ -13,6 +13,11 @@ interface ScoreCardProps {
       clarity_score: number;
       citation_score: number;
       schema_score: number;
+      eeat_score?: number;
+      robots_score?: number;
+      sitemap_score?: number;
+      metadata_score?: number;
+      internal_links_score?: number;
     };
     summary: string;
     qna_coverage: string;
@@ -37,27 +42,123 @@ export const ScoreCard: React.FC<ScoreCardProps> = ({ report }) => {
 
   return (
     <div className="space-y-6">
-      {/* Engine Status Banner */}
-      <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-2.5 bg-gray-900/90 border border-gray-800 rounded-xl text-xs">
-        <div className="flex items-center gap-2 text-gray-300">
-          <Cpu className="w-4 h-4 text-cyan-400" />
-          <span>Evaluation Engine: <strong className="text-white">{report.engine_used || 'OpenAI GPT-4o'}</strong></span>
-        </div>
+      {/* Redesigned Evaluation Engine Status Card */}
+      <div
+        className={`relative overflow-hidden rounded-2xl p-5 sm:p-6 transition-all duration-300 backdrop-blur-xl border ${
+          report.is_mocked
+            ? 'bg-gradient-to-br from-gray-900/95 via-amber-950/20 to-gray-900/95 border-amber-500/30 hover:border-amber-500/50 shadow-lg shadow-amber-500/5'
+            : 'bg-gradient-to-br from-gray-900/95 via-emerald-950/20 to-gray-900/95 border-emerald-500/30 hover:border-emerald-500/50 shadow-lg shadow-emerald-500/5'
+        }`}
+      >
+        {/* Glow ambient background highlight */}
+        <div
+          className={`absolute top-0 right-0 -mt-10 -mr-10 w-48 h-48 rounded-full blur-3xl pointer-events-none ${
+            report.is_mocked ? 'bg-amber-500/10' : 'bg-emerald-500/10'
+          }`}
+        />
 
-        <div className="flex items-center gap-2">
-          {report.is_mocked ? (
-            <span className="px-2.5 py-0.5 rounded-full bg-amber-950/80 border border-amber-800/60 text-amber-300 font-medium">
-              Offline Heuristic Engine
-            </span>
-          ) : (
-            <span className="px-2.5 py-0.5 rounded-full bg-emerald-950/80 border border-emerald-800/60 text-emerald-300 font-medium flex items-center gap-1">
-              <Zap className="w-3 h-3" /> Live AI LLM Evaluation
-            </span>
-          )}
+        <div className="relative z-10 space-y-4">
+          {/* Top Header Row */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-gray-800/80">
+            <div className="flex items-center gap-3">
+              <div
+                className={`p-2.5 rounded-xl border ${
+                  report.is_mocked
+                    ? 'bg-amber-500/10 border-amber-500/20 text-amber-400'
+                    : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
+                }`}
+              >
+                <Cpu className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-white tracking-wide flex items-center gap-1.5">
+                  ⚙️ Evaluation Engine
+                </h3>
+                <p className="text-xs text-gray-400 font-medium mt-0.5">
+                  {report.is_mocked ? 'Deterministic Heuristic Mode' : 'LLM Generative Intelligence Mode'}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              {report.is_mocked ? (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-semibold">
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500" />
+                  </span>
+                  🟠 Fallback Engine
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs font-semibold">
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+                  </span>
+                  🟢 AI Powered
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Engine Model Name & Explanation Description */}
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="space-y-1.5">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Engine Badge:</span>
+                <span
+                  className={`text-xs px-2.5 py-0.5 rounded-md font-mono font-semibold ${
+                    report.is_mocked
+                      ? 'bg-amber-950/80 text-amber-300 border border-amber-800/60'
+                      : 'bg-emerald-950/80 text-emerald-300 border border-emerald-800/60'
+                  }`}
+                >
+                  {report.engine_used || (report.is_mocked ? 'Rule-Based GEO Engine' : 'OpenAI GPT-4o')}
+                </span>
+              </div>
+
+              <p className="text-xs text-gray-300 leading-relaxed max-w-3xl">
+                {report.is_mocked
+                  ? 'OpenAI evaluation was unavailable. Results were generated using the built-in GEO heuristic engine.'
+                  : `Website evaluation completed using ${report.engine_used || 'OpenAI GPT-4o'} with AI-powered GEO analysis.`}
+              </p>
+            </div>
+          </div>
+
+          {/* 4-Column Responsive Metrics Grid */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-2">
+            <div className="bg-gray-950/60 border border-gray-800/80 rounded-xl p-2.5">
+              <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider block">Engine Used</span>
+              <span className="text-xs font-bold text-white truncate block mt-0.5">
+                {report.is_mocked ? 'Rule-Based Engine' : (report.engine_used || 'OpenAI GPT-4o')}
+              </span>
+            </div>
+
+            <div className="bg-gray-950/60 border border-gray-800/80 rounded-xl p-2.5">
+              <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider block">Status</span>
+              <span className={`text-xs font-bold block mt-0.5 ${report.is_mocked ? 'text-amber-400' : 'text-emerald-400'}`}>
+                {report.is_mocked ? 'Fallback' : 'AI Powered'}
+              </span>
+            </div>
+
+            <div className="bg-gray-950/60 border border-gray-800/80 rounded-xl p-2.5">
+              <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider block">Analysis Type</span>
+              <span className="text-xs font-bold text-white block mt-0.5">
+                {report.is_mocked ? 'Offline Rule Engine' : 'Live LLM Analysis'}
+              </span>
+            </div>
+
+            <div className="bg-gray-950/60 border border-gray-800/80 rounded-xl p-2.5">
+              <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider block">Evaluation Mode</span>
+              <span className="text-xs font-bold text-cyan-400 block mt-0.5">
+                {report.is_mocked ? '7-Point Heuristic' : '7-Check AI Evaluation'}
+              </span>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Top Header Card */}
+      {/* Top Header Score Card */}
       <div className="glass-panel-glow rounded-2xl p-6 sm:p-8 relative overflow-hidden">
         <div className="absolute top-0 right-0 -mt-8 -mr-8 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-0 left-0 -mb-8 -ml-8 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />

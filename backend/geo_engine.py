@@ -1,9 +1,40 @@
 import os
 import json
+import traceback
 from openai import AsyncOpenAI
 from dotenv import load_dotenv
 
 load_dotenv()
+
+KNOWN_PLACEHOLDERS = {
+    "paste_api_key",
+    "your-api-key",
+    "your_api_key",
+    "your-openai-api-key",
+    "your_openai_api_key",
+    "your_openai_api_key_here",
+    "paste_your_openai_api_key_here",
+    "sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "sk-xxx",
+}
+
+def is_valid_openai_api_key(api_key: str | None) -> bool:
+    """
+    Validates whether the provided OpenAI API key is present, non-empty,
+    starts with a valid key prefix ('sk-'), and is not a known dummy placeholder string.
+    """
+    if not api_key:
+        return False
+    clean_key = api_key.strip().strip('"\'')
+    if not clean_key:
+        return False
+    if clean_key.lower() in KNOWN_PLACEHOLDERS:
+        return False
+    if not clean_key.startswith("sk-"):
+        return False
+    if len(clean_key) < 10:
+        return False
+    return True
 
 def get_fallback_evaluations(extracted_data: dict) -> dict:
     has_schema = extracted_data.get("has_schema", False)
@@ -116,27 +147,48 @@ def get_fallback_evaluations(extracted_data: dict) -> dict:
     }
 
 async def run_ai_evaluations(extracted_data: dict) -> dict:
-    api_key = os.getenv("OPENAI_API_KEY")
-    if not api_key or api_key.strip() == "" or api_key == "your-api-key":
+    raw_key = os.getenv("OPENAI_API_KEY")
+    is_valid_key = is_valid_openai_api_key(raw_key)
+    model_name = os.getenv("OPENAI_MODEL", "gpt-4o")
+    is_debug = os.getenv("DEBUG", "False").lower() in ("true", "1", "t", "yes")
+
+    print("\n========== OPENAI DEBUG ==========")
+    print(f"API Key Loaded: {'YES (Validated)' if is_valid_key else 'NO (Missing or Placeholder)'}")
+    print(f"Model: {model_name}")
+    print(f"DEBUG Mode: {'ENABLED' if is_debug else 'DISABLED'}")
+
+    if not is_valid_key:
+        print("Reason: OPENAI_API_KEY is missing, unconfigured, or set to a placeholder.")
+        if is_debug:
+            print("DEBUG=True: Raising error for invalid OpenAI API Key.")
+            print("==================================\n")
+            raise ValueError(
+                f"Invalid or placeholder OPENAI_API_KEY configured ('{raw_key}'). "
+                "Please provide a valid OpenAI API key starting with 'sk-' in your environment or .env file."
+            )
+        print("Falling back to Rule-Based GEO Heuristic Engine...")
+        print("==================================\n")
         return get_fallback_evaluations(extracted_data)
 
+    clean_key = raw_key.strip().strip('"\'')
     try:
-        client = AsyncOpenAI(api_key=api_key)
+        print("Sending Request to OpenAI...")
+        client = AsyncOpenAI(api_key=clean_key, timeout=25.0, max_retries=2)
         prompt = f"""
         You are an expert GEO (Generative Engine Optimization) Auditor. Evaluate this website content across 7 explicit checks for AI search visibility (ChatGPT, Perplexity, Claude, Google AI Overviews).
 
-        URL: {extracted_data['url']}
-        Title: {extracted_data['title']}
+        URL: {extracted_data.get('url', '')}
+        Title: {extracted_data.get('title', '')}
         Meta Description: {extracted_data.get('meta_description', '')}
         Robots.txt Present: {extracted_data.get('has_robots_txt')} (AI Bots Blocked: {extracted_data.get('ai_bots_blocked')})
         Sitemap Present: {extracted_data.get('has_sitemap')}
-        Headings: {extracted_data['headings']}
-        JSON-LD Schemas Found: {extracted_data['schemas']}
+        Headings: {extracted_data.get('headings', [])}
+        JSON-LD Schemas Found: {extracted_data.get('schemas', [])}
         E-E-A-T Author Schema: {extracted_data.get('has_author_schema')}
-        SameAs Social Links: {extracted_data.get('same_as_links')}
+        SameAs Social Links: {extracted_data.get('same_as_links', [])}
         Tables Count: {extracted_data.get('tables_count', 0)}
         Internal Links Count: {extracted_data.get('internal_links_count', 0)}
-        Text Content Sample: {extracted_data['raw_text']}
+        Text Content Sample: {extracted_data.get('raw_text', '')}
 
         Tasks:
         1. Assess AI Clarity Confidence (0-100), Citation Likelihood (0-100), and E-E-A-T Score (0-100).
@@ -166,18 +218,54 @@ async def run_ai_evaluations(extracted_data: dict) -> dict:
           ]
         }}
         """
-        
+
         response = await client.chat.completions.create(
-            model="gpt-4o",
+            model=model_name,
             response_format={"type": "json_object"},
             messages=[{"role": "user", "content": prompt}],
             temperature=0.2
         )
-        
-        result = json.loads(response.choices[0].message.content)
+
+        print("Request Successful")
+        print("Received Response")
+        print("Parsing JSON...")
+
+        content = response.choices[0].message.content
+        if not content:
+            raise ValueError("OpenAI API returned empty response content.")
+
+        result = json.loads(content)
+        print("JSON Parsed Successfully")
+        print("==================================\n")
+
+        # Validate required fields and apply defaults
+        result["clarity_score"] = int(result.get("clarity_score", 70))
+        result["citation_score"] = int(result.get("citation_score", 70))
+        result["eeat_score"] = int(result.get("eeat_score", 70))
+        result["summary"] = str(result.get("summary", "AI evaluation completed successfully."))
+        result["answered_questions_count"] = int(result.get("answered_questions_count", 3))
+        result["total_questions"] = int(result.get("total_questions", 5))
+        result["issues"] = list(result.get("issues", []))
+
         result["is_mocked"] = False
-        result["engine_used"] = "OpenAI GPT-4o (7-Check AI Evaluation)"
+        result["engine_used"] = f"OpenAI {model_name} (7-Check AI Evaluation)"
         return result
+
     except Exception as e:
-        print(f"OpenAI evaluation failed ({e}). Falling back to 7-check rule engine.")
+        print("\n========== OPENAI ERROR ==========")
+        print(f"Exception Type: {type(e).__name__}")
+        print(f"Error Message: {str(e)}")
+        if hasattr(e, "response") and getattr(e, "response") is not None:
+            try:
+                print(f"Response Body: {e.response.text}")
+            except Exception:
+                pass
+        print("Stack Trace:")
+        traceback.print_exc()
+        print("==================================\n")
+
+        if is_debug:
+            raise RuntimeError(f"OpenAI Evaluation Failed in DEBUG mode: {str(e)}") from e
+
+        print("Falling back to 7-check rule engine (Production Fallback).")
         return get_fallback_evaluations(extracted_data)

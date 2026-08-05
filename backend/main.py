@@ -2,10 +2,13 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import os
-print("🚀 GEO Auditor backend loaded")
+
+print("[GEO Auditor] Backend loaded successfully")
+
 from crawler import extract_site_data
-from geo_engine import run_ai_evaluations
+from geo_engine import run_ai_evaluations, is_valid_openai_api_key
 from scoring import calculate_geo_score
+
 app = FastAPI(
     title="GEO Auditor API",
     description="Generative Engine Optimization (GEO) Website Auditor & AI Visibility Scoring Engine",
@@ -26,10 +29,11 @@ class AuditRequest(BaseModel):
 @app.get("/")
 @app.get("/api/health")
 async def health_check():
+    api_key = os.getenv("OPENAI_API_KEY")
     return {
         "status": "online",
         "service": "GEO Search Auditor API",
-        "openai_configured": bool(os.getenv("OPENAI_API_KEY"))
+        "openai_configured": is_valid_openai_api_key(api_key)
     }
 
 @app.post("/api/analyze")
@@ -41,7 +45,13 @@ async def analyze_website(req: AuditRequest):
     if "error" in data:
         raise HTTPException(status_code=400, detail=data["error"])
 
-    ai_results = await run_ai_evaluations(data)
+    try:
+        ai_results = await run_ai_evaluations(data)
+    except Exception as e:
+        is_debug = os.getenv("DEBUG", "False").lower() in ("true", "1", "t", "yes")
+        if is_debug:
+            raise HTTPException(status_code=500, detail=f"OpenAI Evaluation Error (DEBUG=True): {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
     schema_points = 100 if data["has_schema"] else 0
     has_metadata = bool(data.get("title") and data.get("meta_description"))
