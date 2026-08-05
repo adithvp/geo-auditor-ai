@@ -1,0 +1,3 @@
+module.exports=[27572,a=>{"use strict";var b=a.i(7997);a.s(["default",0,function({children:a}){return(0,b.jsx)("html",{lang:"en",className:"dark",children:(0,b.jsx)("body",{className:"min-h-screen bg-[#070A11] text-gray-100 antialiased selection:bg-cyan-500 selection:text-black",children:a})})},"metadata",0,{title:"GEO Auditor | Generative Engine Optimization",description:"Evaluate and audit website visibility for AI search engines like ChatGPT, Perplexity, Claude, and Google AI Overviews."}])},50645,function(a){a.n(a.i(27572))}];
+
+//# sourceMappingURL=src_app_layout_tsx_0r5yz5t._.js.map
